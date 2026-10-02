@@ -1,0 +1,39 @@
+# Local environments and secrets
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*service-account*.json
+credentials*.json
+kaggle.json
+
+# Python and analysis caches
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Data and generated artifacts
+data/raw/
+data/processed/
+*.duckdb
+*.sqlite
+*.sqlite3
+models/
+mlruns/
+mlartifacts/
+artifacts/
+
+# Frontend build products
+node_modules/
+dist/
+.next/
+
+# Local tooling
+.idea/
+.DS_Store
+Thumbs.db
