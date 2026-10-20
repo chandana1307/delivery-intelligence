@@ -92,3 +92,58 @@ The following decisions are frozen before final-test evaluation:
 
 The May-July 2018 final test period has not been used for model selection
 or tuning.
+
+## Final Untouched Test Results
+
+After all model, feature, and operational-capacity decisions were frozen,
+the selected Logistic Regression model was retrained using only outcomes
+known by May 1, 2018.
+
+Final training population:
+
+- 68,277 orders
+- 4,947 late deliveries
+- Late rate: 7.25%
+
+Untouched test period:
+
+- May 1, 2018 through July 31, 2018
+- 19,055 orders
+- 718 late deliveries
+- Late rate: 3.77%
+
+Final test performance:
+
+- Average Precision: 0.0840
+- ROC-AUC: 0.7038
+- Brier Score: 0.0375
+
+Daily Top-10 review:
+
+- Precision: 9.57%
+- Recall: 11.98%
+- Lift: 2.54x
+
+Daily Top-25 review:
+
+- Precision: 8.15%
+- Recall: 25.35%
+- Lift: 2.16x
+
+Daily Top-50 review:
+
+- Precision: 6.75%
+- Recall: 41.92%
+- Lift: 1.79x
+
+The final test period had a substantially lower late-delivery prevalence
+than the validation period (3.77% versus 12.63%). Therefore, absolute
+precision and Average Precision decreased.
+
+However, the selected model continued to meaningfully rank higher-risk
+orders. At the primary operational capacity of 25 orders per day, the
+review queue had a late-delivery rate 2.16 times the overall test-period
+rate and captured 25.35% of all late deliveries.
+
+The final test results will not be used for additional model tuning or
+feature selection.
