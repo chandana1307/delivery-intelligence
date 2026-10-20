@@ -3,17 +3,6 @@ import pandas as pd
 
 TARGET_COLUMN = "late_delivery"
 
-ID_COLUMNS = [
-    "order_id",
-]
-
-METADATA_COLUMNS = [
-    "score_time",
-    "label_available_at",
-    "eligible_for_late_label",
-    "ml_eligible",
-]
-
 FORBIDDEN_FEATURES = [
     "late_delivery",
     "label_available_at",
@@ -44,18 +33,37 @@ BASE_BINARY_FEATURES = [
 ]
 
 
-def add_approval_time_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Create calendar features using information available at order approval time.
-    """
+SELLER_HISTORY_FEATURES = [
+    "seller_prior_orders_min",
+    "seller_prior_orders_mean",
+    "seller_prior_orders_max",
+    "seller_prior_late_rate_mean",
+    "seller_prior_late_rate_max",
+    "seller_history_available_share",
+]
+
+
+def add_approval_time_features(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
 
     result = df.copy()
 
-    result["score_time"] = pd.to_datetime(result["score_time"])
+    result["score_time"] = pd.to_datetime(
+        result["score_time"]
+    )
 
-    result["approval_hour"] = result["score_time"].dt.hour
-    result["approval_day_of_week"] = result["score_time"].dt.dayofweek
-    result["approval_month"] = result["score_time"].dt.month
+    result["approval_hour"] = (
+        result["score_time"].dt.hour
+    )
+
+    result["approval_day_of_week"] = (
+        result["score_time"].dt.dayofweek
+    )
+
+    result["approval_month"] = (
+        result["score_time"].dt.month
+    )
 
     result["approval_weekend"] = (
         result["score_time"].dt.dayofweek >= 5
@@ -64,35 +72,50 @@ def add_approval_time_features(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def get_feature_columns():
-    numeric_features = BASE_NUMERIC_FEATURES + [
-        "approval_hour",
-        "approval_day_of_week",
-        "approval_month",
-    ]
+def get_feature_columns(
+    feature_set="A",
+):
 
-    categorical_features = BASE_CATEGORICAL_FEATURES
-
-    binary_features = BASE_BINARY_FEATURES + [
-        "approval_weekend",
-    ]
-
-    return numeric_features, categorical_features, binary_features
-
-
-def build_feature_set_a(df: pd.DataFrame):
-    """
-    Build the initial approval-time static feature set.
-
-    This deliberately excludes historical seller features.
-    Those will be added later as Feature Set B.
-    """
-
-    data = add_approval_time_features(df)
-
-    numeric_features, categorical_features, binary_features = (
-        get_feature_columns()
+    numeric_features = (
+        BASE_NUMERIC_FEATURES
+        + [
+            "approval_hour",
+            "approval_day_of_week",
+            "approval_month",
+        ]
     )
+
+    if feature_set.upper() == "B":
+        numeric_features = (
+            numeric_features
+            + SELLER_HISTORY_FEATURES
+        )
+
+    categorical_features = (
+        BASE_CATEGORICAL_FEATURES
+    )
+
+    binary_features = (
+        BASE_BINARY_FEATURES
+        + ["approval_weekend"]
+    )
+
+    return (
+        numeric_features,
+        categorical_features,
+        binary_features,
+    )
+
+
+def _build_features(
+    data,
+    feature_set,
+):
+    (
+        numeric_features,
+        categorical_features,
+        binary_features,
+    ) = get_feature_columns(feature_set)
 
     feature_columns = (
         numeric_features
@@ -100,15 +123,53 @@ def build_feature_set_a(df: pd.DataFrame):
         + binary_features
     )
 
-    leaked_columns = set(feature_columns).intersection(FORBIDDEN_FEATURES)
+    leaked_columns = (
+        set(feature_columns)
+        .intersection(FORBIDDEN_FEATURES)
+    )
 
     if leaked_columns:
         raise ValueError(
-            f"Leakage detected in model features: {sorted(leaked_columns)}"
+            "Leakage detected: "
+            f"{sorted(leaked_columns)}"
         )
 
     X = data[feature_columns].copy()
 
-    y = data[TARGET_COLUMN].astype(int).copy()
+    y = (
+        data[TARGET_COLUMN]
+        .astype(int)
+        .copy()
+    )
 
     return X, y, feature_columns
+
+
+def build_feature_set_a(
+    df: pd.DataFrame,
+):
+    data = add_approval_time_features(df)
+
+    return _build_features(
+        data,
+        "A",
+    )
+
+
+def build_feature_set_b(
+    df: pd.DataFrame,
+    seller_history_features: pd.DataFrame,
+):
+    data = add_approval_time_features(df)
+
+    data = data.merge(
+        seller_history_features,
+        on="order_id",
+        how="left",
+        validate="one_to_one",
+    )
+
+    return _build_features(
+        data,
+        "B",
+    )
