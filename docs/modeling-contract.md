@@ -33,6 +33,13 @@ The primary supervised-learning population contains orders that:
 
 Canceled and unresolved orders are excluded from the binary target population and reported separately.
 
+### Timestamp Consistency Exclusion
+
+A consistency check identified 61 otherwise eligible orders where the recorded customer delivery timestamp was at or before the order approval timestamp.
+
+These records are retained in the source and analytics layers but excluded from the prediction-model population because they violate the assumed event sequence required for approval-time scoring.
+
+One of the 61 excluded orders was labeled late.
 ## Leakage Rule
 
 A feature may contain only information assumed to be available at or before the order approval timestamp.

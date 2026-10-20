@@ -59,11 +59,20 @@ SELECT
     od.late_delivery,
 
     -- Primary Stage 3 modeling population
-    CASE
-        WHEN od.eligible_for_late_label = TRUE
-         AND od.order_approved_at IS NOT NULL
-        THEN TRUE
-        ELSE FALSE
-    END AS ml_eligible
+CASE
+    WHEN od.eligible_for_late_label = TRUE
+     AND od.order_approved_at IS NOT NULL
+     AND od.order_delivered_customer_date > od.order_approved_at
+    THEN TRUE
+    ELSE FALSE
+END AS ml_eligible,
+
+CASE
+    WHEN od.order_approved_at IS NOT NULL
+     AND od.order_delivered_customer_date IS NOT NULL
+     AND od.order_delivered_customer_date > od.order_approved_at
+    THEN TRUE
+    ELSE FALSE
+END AS timeline_valid_for_ml
 
 FROM analytics.order_delivery od;
