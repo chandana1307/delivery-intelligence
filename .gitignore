@@ -27,7 +27,7 @@ models/
 mlruns/
 mlartifacts/
 artifacts/
-
+artifacts/*.joblib
 # Frontend build products
 node_modules/
 dist/
